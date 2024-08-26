@@ -2,7 +2,7 @@
 This Python programme will help motivate you to talk while streaming using OBS.
 
 # How to Use
-To use this programme, download the "Commentary Judge" file, then you must add the "Commentary_Judge.py" file to your OBS "Scripts" tabs which can be found under "Tools".
+To use this programme, download the "Commentary Judge" file, then you must add the **"Commentary_Judge.py"** file to your OBS **"Scripts"** tabs which can be found under "Tools". **You'll also need to install the following libraires: pyaudio, audioop, sounddevice, soundfile.**
 
 ![Settings](Motivator_Gui.JPG)
 
