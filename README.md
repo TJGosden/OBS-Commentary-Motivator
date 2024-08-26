@@ -1,5 +1,5 @@
 # OBS-Commentary-Motivator
-This programme will help motivate you to talk while streaming using OBS.
+This Python programme will help motivate you to talk while streaming using OBS.
 
 # How to Use
 To use this programme, download the "Commentary Judge" file, then you must add the "Commentary_Judge.py" file to your OBS "Scripts" tabs which can be found under "Tools".
