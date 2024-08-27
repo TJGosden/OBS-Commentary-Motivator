@@ -273,9 +273,11 @@ def script_description():
 
 def script_update(settings):
     timeSlider = obs.obs_data_get_int(settings, "slider")
-    v.device = int(obs.obs_data_get_string(settings, "output"))
-
-    v.inputDevice = int(obs.obs_data_get_string(settings, "input"))
+    try:
+        v.device = int(obs.obs_data_get_string(settings, "output"))
+        v.inputDevice = int(obs.obs_data_get_string(settings, "input"))
+    except:
+        print("Choose audio devices")
     input_stream(v.inputDevice)
     v.maxTime = timeSlider * 600                            #convert time from minutes to deciseconds
     #v.maxTime = 20                                         #for testing
