@@ -17,7 +17,7 @@ import soundfile as sf
 
 # PyAudio parameters
 FORMAT = pyaudio.paInt16
-CHANNELS = 1     #has been known not to work on 2, but unsure why
+CHANNELS = 2
 RATE = 44100
 CHUNK = 1024
 
@@ -40,10 +40,18 @@ class Variables:
         self.audio = pyaudio.PyAudio()
 
         self.inputDevice = 1
-        #Open stream
-        self.inputData = self.audio.open(format=FORMAT, channels=CHANNELS,
-                        rate=RATE, input=True, input_device_index= self.inputDevice,
-                        frames_per_buffer=CHUNK)
+        #Open stream and check for number of channels
+        try:
+            CHANNELS = 2
+            self.inputData = self.audio.open(format=FORMAT, channels=CHANNELS,
+                rate=RATE, input=True, input_device_index= self.inputDevice,
+                frames_per_buffer=CHUNK)           
+        except:
+            CHANNELS = 1
+            self.inputData = self.audio.open(format=FORMAT, channels=CHANNELS,
+                rate=RATE, input=True, input_device_index= self.inputDevice,
+                frames_per_buffer=CHUNK)
+            print("couldn't load sound in stereo, mono will be selected instead")
 
 class Prompts:
     def __init__(self, audio):
