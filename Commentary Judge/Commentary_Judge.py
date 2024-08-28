@@ -28,7 +28,7 @@ class Variables:
         self.speakingCount = 0
         self.maxTime = 0
         self.toggle = None
-        self.sourceName = "Speach Light (Tome)"
+        self.sourceName = "Speech Light (Tome)"
         self.redCount = 0
         self.detect = None
         self.image = "sound indicator.png"
@@ -266,7 +266,7 @@ def input_device_list(pList):
 
 #description of programme for OBS
 def script_description():
-    return  "<h1>Tome's Speach Motivator</h1>" + \
+    return  "<h1>Tome's Commentary Motivator</h1>" + \
             "Python script for listening to motivate you to talk more by shouting at you if you don't." + \
             "<br/>" +\
             "----------------------------------------------------------"  
