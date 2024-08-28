@@ -17,7 +17,7 @@ import soundfile as sf
 
 # PyAudio parameters
 FORMAT = pyaudio.paInt16
-CHANNELS = 2
+CHANNELS = 1     #has been known not to work on 2, but unsure why
 RATE = 44100
 CHUNK = 1024
 
