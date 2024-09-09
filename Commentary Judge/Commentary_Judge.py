@@ -1,16 +1,14 @@
-from cmd import PROMPT
-from pyclbr import Class
-import pyaudio
-import numpy as np
-import time
-import audioop
 import obspython as obs
-import Play_Audio_Commentary as play
-import random
+import numpy as np
 import os
-import ctypes
+import random
+
+import pyaudio
+import audioop
 import sounddevice as sd
 import soundfile as sf
+
+import Play_Audio_Commentary as play
 
 
 ########### VARIABLES ############
@@ -35,12 +33,16 @@ class Variables:
         self.red = "Red"
         self.green = "Green"
         self.device = ""
+        self.silence = 0
+        self.mode = None
+        self.origTime = 0
+        self.streak = 0
 
         #Initialize PyAudio
         self.audio = pyaudio.PyAudio()
 
         self.inputDevice = 1
-        #Open stream and check for number of channels
+        #Open stream
         try:
             CHANNELS = 2
             self.inputData = self.audio.open(format=FORMAT, channels=CHANNELS,
@@ -52,6 +54,7 @@ class Variables:
                 rate=RATE, input=True, input_device_index= self.inputDevice,
                 frames_per_buffer=CHUNK)
             print("couldn't load sound in stereo, mono will be selected instead")
+
 
 class Prompts:
     def __init__(self, audio):
@@ -92,6 +95,17 @@ def toggle_countdown(props, prop):
         except:
             print("You need to enter a valid Audio Device")
             return
+
+        #Update silence count on stream
+        v.silence = 0
+        sourceName = "silence"
+        settings = obs.obs_data_create()
+        source = obs.obs_get_source_by_name(sourceName)
+        obs.obs_data_set_string(settings, "text", f"Silence: {v.silence}")
+        obs.obs_source_update(source, settings)
+        #Release
+        obs.obs_data_release(settings)
+        obs.obs_source_release(source)
 
         print("Max Time: " + str(v.maxTime/10) + "s")
         print("Listening...")
@@ -163,9 +177,28 @@ def listen():
     
     #check if countdown has ended
     if v.timer >= v.maxTime:
-        v.maxTime = round((v.maxTime/2) + 5)
+        #Countdown Modes
+        if v.mode == "basic":
+            v.maxTime = v.origTime            
+        elif v.mode == "decrease":
+            v.maxTime = round((v.maxTime/2) + 5)
+        elif v.mode == "continuous":
+            if v.streak > 0:
+                v.maxTime = round((v.maxTime/2) + 5)
+
+        v.silence += 1
         v.timer = 0
         print("you stopped talking, the timer has decreased to:" + str(v.maxTime/10) + "s")
+
+        #Update silence count on stream
+        sourceName = "silence"
+        settings = obs.obs_data_create()
+        source = obs.obs_get_source_by_name(sourceName)
+        obs.obs_data_set_string(settings, "text", f"Silence: {v.silence}")
+        obs.obs_source_update(source, settings)
+        #Release
+        obs.obs_data_release(settings)
+        obs.obs_source_release(source)
 
         #play random audio file
         entry = random.randint(1, len(prompt_dict))
@@ -184,7 +217,12 @@ def is_talking():
         if v.speakingCount >= 25:            
             v.timer = 0
             v.speakingCount = 0
+            v.streak = 0
+            if v.mode == "continuous":
+                v.maxTime = v.origTime
             print("Countdown Reset")
+        else:
+            v.streak += 1
 
         v.iT = 0
         v.detect = False
@@ -267,7 +305,10 @@ def input_device_list(pList):
             obs.obs_property_list_add_string(pList, formatted_device_string, device_index)
         i += 1 
 
-
+def mode_list(pList):
+    obs.obs_property_list_add_string(pList, "Basic", "basic")
+    obs.obs_property_list_add_string(pList, "Decrease", "decrease")
+    obs.obs_property_list_add_string(pList, "Continuous", "continuous")
 
 
 ########### OBS SCRIPT FUNCTIONS ############
@@ -275,9 +316,11 @@ def input_device_list(pList):
 #description of programme for OBS
 def script_description():
     return  "<h1>Tome's Commentary Motivator</h1>" + \
-            "Python script for listening to motivate you to talk more by shouting at you if you don't." + \
+            "Python script that listens to you and motivates you to talk more by shouting at you if you don't." + \
             "<br/>" +\
-            "----------------------------------------------------------"  
+            "----------------------------------------------------------" + \
+            "<br/>" +\
+            "Set your audio devices, 'add light', set 'max time', start, and get commentating!"
 
 def script_update(settings):
     timeSlider = obs.obs_data_get_int(settings, "slider")
@@ -287,8 +330,10 @@ def script_update(settings):
     except:
         print("Choose audio devices")
     input_stream(v.inputDevice)
-    v.maxTime = timeSlider * 600                            #convert time from minutes to deciseconds
-    #v.maxTime = 20                                         #for testing
+    v.origTime = v.maxTime = timeSlider * 10                            #convert time from seconds to deciseconds
+
+    #Update the countdown mode
+    v.mode = obs.obs_data_get_string(settings, "mode")
     
 def script_properties():
     props = obs.obs_properties_create()
@@ -297,8 +342,10 @@ def script_properties():
     output_device_list(outputList)
     inputList = obs.obs_properties_add_list(props, "input", "Input Devices", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
     input_device_list(inputList)
+    modeList = obs.obs_properties_add_list(props, "mode", "Modes", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    mode_list(modeList)
 
-    obs.obs_properties_add_int_slider(props, "slider", "Max Time", 1, 10, 1)    #slider for maximum time in minutes
+    obs.obs_properties_add_int_slider(props, "slider", "Max Time", 10, 600, 10)    #slider for maximum time in minutes
     obs.obs_properties_add_button(props, "toggle", "Start/Stop", toggle_countdown)
     obs.obs_properties_add_button(props, "light", "Add Light", add_light)
 
