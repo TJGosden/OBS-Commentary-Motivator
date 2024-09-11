@@ -36,7 +36,6 @@ class Variables:
         self.silence = 0
         self.mode = None
         self.origTime = 0
-        self.streak = 0
 
         #Initialize PyAudio
         self.audio = pyaudio.PyAudio()
@@ -182,11 +181,10 @@ def listen():
             v.maxTime = v.origTime            
         elif v.mode == "decrease":
             v.maxTime = round((v.maxTime/2) + 5)
-        elif v.mode == "continuous":
-            if v.streak > 0:
-                v.maxTime = round((v.maxTime/2) + 5)
+        elif v.mode == "reset":
+            v.maxTime = round((v.maxTime/2) + 5)
 
-        v.silence += 1
+        v.silence += 1        
         v.timer = 0
         print("you stopped talking, the timer has decreased to:" + str(v.maxTime/10) + "s")
 
@@ -217,12 +215,9 @@ def is_talking():
         if v.speakingCount >= 25:            
             v.timer = 0
             v.speakingCount = 0
-            v.streak = 0
-            if v.mode == "continuous":
+            if v.mode == "reset":
                 v.maxTime = v.origTime
             print("Countdown Reset")
-        else:
-            v.streak += 1
 
         v.iT = 0
         v.detect = False
@@ -308,7 +303,7 @@ def input_device_list(pList):
 def mode_list(pList):
     obs.obs_property_list_add_string(pList, "Basic", "basic")
     obs.obs_property_list_add_string(pList, "Decrease", "decrease")
-    obs.obs_property_list_add_string(pList, "Continuous", "continuous")
+    obs.obs_property_list_add_string(pList, "Reset", "reset")
 
 
 ########### OBS SCRIPT FUNCTIONS ############
